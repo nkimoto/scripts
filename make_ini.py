@@ -1,28 +1,29 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import sys
+#!usr/bin/env python
+
 import os
-from collections import OrderedDict
+import sys
+import glob
 
-def make_ini_dict(fastq_dir):
-    sample_list = sorted(os.listdir(fastq_dir), key = lambda x: int(x[:2]) if x[:2].isdigit() else int(x[0]))
-    sample_dict = OrderedDict()
-    for n, i in enumerate(sample_list):
-        prefix = i.split('_R')[0]
-        for j in sample_list[n + 1:]:
-            if prefix in j:
-                sample_dict[prefix] = [fastq_dir + i, fastq_dir + j]
-                break
-    return sample_dict
+def check_fastaq(f):
+    _, ext = os.path.splitext(f)
+    ok_ext_list = [".fa", ".fq", ".fasta", ".fastq"]
+    return ext in ok_ext_list
 
-def make_ini(sample_dict, ini):
-    writelines =[]
-    for sample, fq_list in sample_dict.items():
-        writelines.append(sample + '=' + fq_list[0] + ',' + fq_list[1])
-    with open(ini, 'w') as wf:
-        wf.write('[fastq]\n' + '\n'.join(writelines))
+def get_path(target_dir):
+    path_list = [os.path.abspath(j) for j in glob.glob("{}/*".format(target_dir)) + glob.glob("{}/*/*".format(target_dir)) if check_fastaq(j) == True]
+    return path_list
+
+def get_name_list(path_list):
+    name_list = [os.path.splitext(i.split('/')[-1])[0] for i in path_list]
+    return name_list
+
+def make_ini(output, name_list, path_list, filetype = 'fastq'):
+    with open(output, 'w') as wf:
+        wf.write('[{}]\n'.format(filetype))
+        wf.write('\n'.join([i + '=' + j for i, j in zip(name_list, path_list)]))
 
 if __name__ == '__main__':
-    args = sys.argv
-    sample_dict = make_ini_dict(args[1])
-    make_ini(sample_dict, 'test.ini')
+    target_dir = sys.argv[1]
+    path_list = get_path(target_dir)
+    name_list = get_name_list(path_list)
+    make_ini('output.ini', name_list, path_list)
