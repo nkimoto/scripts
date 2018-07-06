@@ -22,3 +22,7 @@ for (i in 2:length(args)){
 pkgs <- pkgDep(my.pkgs, suggests = TRUE, enhances=FALSE)
 makeRepo(pkgs = pkgs, path=args[1], repos=revolution, type = c("source"))
 
+cat("For Installation,
+    \n```\n
+    install.packages("Seurat", repos = "file:///home/kimoton/GetPetitBC/tmp2",
+    type = "source")\n```\n")
